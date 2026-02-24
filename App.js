@@ -21,7 +21,76 @@ import { db } from './firebaseConfig';
 
 export default function App() {
 
- 
+  const [lista, setLista] = useState([]);
+  const [nome, setNome] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [editandoId, setEditandoId] = useState(null);
+
+  // 🔹 LISTAR DO FIREBASE
+  const listar = async () => {
+    const querySnapshot = await getDocs(collection(db, 'clientes'));
+    const novaLista = [];
+
+    querySnapshot.forEach((docItem) => {
+      novaLista.push({
+        id: docItem.id,
+        ...docItem.data()
+      });
+    });
+
+    setLista(novaLista);
+  };
+
+  // 🔹 INSERIR
+  const inserir = async () => {
+    if (!nome || !cpf) return;
+
+    await addDoc(collection(db, 'clientes'), {
+      nome: nome,
+      cpf: cpf
+    });
+
+    limparCampos();
+    listar();
+  };
+
+  // 🔹 ATUALIZAR
+  const atualizar = async () => {
+    const clienteRef = doc(db, 'clientes', editandoId);
+
+    await updateDoc(clienteRef, {
+      nome: nome,
+      cpf: cpf
+    });
+
+    setEditandoId(null);
+    limparCampos();
+    listar();
+  };
+
+  // 🔹 EXCLUIR
+  const excluir = async (id) => {
+    await deleteDoc(doc(db, 'clientes', id));
+    listar();
+  };
+
+  // 🔹 EDITAR
+  const editar = (item) => {
+    setNome(item.nome);
+    setCpf(item.cpf);
+    setEditandoId(item.id);
+  };
+
+  // 🔹 LIMPAR CAMPOS
+  const limparCampos = () => {
+    setNome('');
+    setCpf('');
+  };
+
+  useEffect(() => {
+    listar();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>CRUD Firebase</Text>
